@@ -1,4 +1,4 @@
-from google import genai
+from google.ai import generativelanguage as genai
 import logging
 import time
 import os
@@ -45,3 +45,4 @@ class GeminiClient:
                     return "Sorry, I'm experiencing technical difficulties. Please try again later."
 
 gemini_client = GeminiClient()
+
