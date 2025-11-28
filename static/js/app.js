@@ -1,7 +1,9 @@
+// Update Top-K value display when slider is moved
 document.getElementById('topKSlider').addEventListener('input', function() {
     document.getElementById('topKValue').textContent = this.value;
 });
 
+// Send the user's question to the backend API
 async function sendQuestion() {
     const questionInput = document.getElementById('questionInput');
     const question = questionInput.value.trim();
@@ -47,6 +49,7 @@ async function sendQuestion() {
     }
 }
 
+// Append a message to the chat area
 function addMessageToChat(sender, message, data = null) {
     const chatMessages = document.getElementById('chatMessages');
     
@@ -64,6 +67,7 @@ function addMessageToChat(sender, message, data = null) {
     messageDiv.appendChild(header);
     messageDiv.appendChild(content);
     
+    // Display sources if available
     if (data && data.sources && data.sources.length > 0) {
         const sourcesDiv = document.createElement('div');
         sourcesDiv.className = 'sources-list small text-muted mt-2';
@@ -78,6 +82,7 @@ function addMessageToChat(sender, message, data = null) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// Show a typing indicator for the bot
 function showTypingIndicator() {
     const chatMessages = document.getElementById('chatMessages');
     const typingDiv = document.createElement('div');
@@ -91,17 +96,20 @@ function showTypingIndicator() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// Remove the bot typing indicator
 function removeTypingIndicator() {
     const typingIndicator = document.getElementById('typingIndicator');
     if (typingIndicator) typingIndicator.remove();
 }
 
+// Clear the conversation history in the UI
 async function clearHistory() {
     if (confirm('Clear conversation history?')) {
         document.getElementById('chatMessages').innerHTML = '';
     }
 }
 
+// Send question on Enter key press (without Shift)
 document.getElementById('questionInput').addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
