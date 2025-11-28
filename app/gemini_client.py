@@ -1,7 +1,8 @@
-import google.generativeai as genai
+from google import genai
 import logging
 import time
-from app.config import GEMINI_API_KEY, LLM_MODEL, GEMINI_SAFETY_SETTINGS
+import os
+from app.config import GEMINI_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -10,12 +11,11 @@ class GeminiClient:
         if not GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
         
-        genai.configure(api_key=GEMINI_API_KEY)
-        self.model = genai.GenerativeModel(LLM_MODEL)
+        # 🟢 Инициализация клиента с использованием нового API
+        self.client = genai.Client(api_key=GEMINI_API_KEY)
+        self.model = "gemini-2.5-flash"  # Прямое указание стабильной версии модели
         
-        self.safety_settings = GEMINI_SAFETY_SETTINGS
-        
-        logger.info("Gemini client initialized successfully")
+        logger.info(f"Gemini client initialized with model: {self.model}")
     
     def generate_response(self, prompt: str, temperature: float = 0.1) -> str:
         max_retries = 3
@@ -23,27 +23,18 @@ class GeminiClient:
         
         for attempt in range(max_retries):
             try:
-                response = self.model.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=temperature,
-                        top_p=0.8,
-                        top_k=40,
-                        max_output_tokens=2048,
-                    ),
-                    safety_settings=self.safety_settings
+                # 🟢 Правильный вызов через новое API
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt
                 )
                 
-                if response.prompt_feedback.block_reason:
-                    block_reason = response.prompt_feedback.block_reason
-                    logger.warning(f"Content blocked: {block_reason}")
-                    return f"I cannot answer this question due to content safety restrictions. Please try rephrasing your question."
-                
-                if not response.parts:
-                    logger.warning("Empty response from Gemini")
+                # 🟢 Получение текста ответа
+                if hasattr(response, 'text') and response.text:
+                    return response.text
+                else:
+                    logger.warning("Empty or unexpected response from Gemini")
                     return "I couldn't generate a response for this question. Please try again."
-                
-                return response.text
                 
             except Exception as e:
                 logger.warning(f"Gemini API attempt {attempt + 1} failed: {str(e)}")
