@@ -1,4 +1,4 @@
-from google.ai import generativelanguage as genai
+import google.generativeai as genai
 import logging
 import time
 import os
@@ -11,11 +11,11 @@ class GeminiClient:
         if not GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
         
-        # 🟢 Инициализация клиента с использованием нового API
-        self.client = genai.Client(api_key=GEMINI_API_KEY)
-        self.model = "gemini-2.5-flash"  # Прямое указание стабильной версии модели
+        # 🟢 ПРАВИЛЬНАЯ ИНИЦИАЛИЗАЦИЯ
+        genai.configure(api_key=GEMINI_API_KEY)
+        self.model = genai.GenerativeModel('gemini-2.0-flash')  # Используем стабильную модель
         
-        logger.info(f"Gemini client initialized with model: {self.model}")
+        logger.info(f"Gemini client initialized with model: gemini-2.0-flash")
     
     def generate_response(self, prompt: str, temperature: float = 0.1) -> str:
         max_retries = 3
@@ -23,17 +23,21 @@ class GeminiClient:
         
         for attempt in range(max_retries):
             try:
-                # 🟢 Правильный вызов через новое API
-                response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=prompt
+                # 🟢 ПРАВИЛЬНЫЙ ВЫЗОВ
+                response = self.model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=temperature,
+                        top_p=0.8,
+                        top_k=40,
+                        max_output_tokens=2048,
+                    )
                 )
                 
-                # 🟢 Получение текста ответа
-                if hasattr(response, 'text') and response.text:
+                if response.text:
                     return response.text
                 else:
-                    logger.warning("Empty or unexpected response from Gemini")
+                    logger.warning("Empty response from Gemini")
                     return "I couldn't generate a response for this question. Please try again."
                 
             except Exception as e:
@@ -45,4 +49,3 @@ class GeminiClient:
                     return "Sorry, I'm experiencing technical difficulties. Please try again later."
 
 gemini_client = GeminiClient()
-
