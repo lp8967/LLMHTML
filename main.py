@@ -73,6 +73,14 @@ async def query_documents(query_request: QueryRequest, session_id: str = "defaul
         context_documents = rag_results['documents']
         metadatas = rag_results.get('metadatas', [])
         
+        # 🟢 ДОБАВЬ ЭТУ ПРОВЕРКУ ДЛЯ БЕЗОПАСНОСТИ:
+        # Безопасное извлечение метаданных из вложенной структуры
+        if metadatas and isinstance(metadatas, list) and len(metadatas) > 0:
+            if isinstance(metadatas[0], list):
+                metadatas = metadatas[0]  # Извлекаем внутренний список
+        else:
+            metadatas = []
+        
         formatted_context = format_context(context_documents, metadatas)
         
         conversation_history = conversation_memory.get_conversation_history(session_id, limit=3)
@@ -94,7 +102,9 @@ async def query_documents(query_request: QueryRequest, session_id: str = "defaul
         """
         
         answer = gemini_client.generate_response(prompt)
-        sources = format_sources(metadatas)
+        
+        # 🟢 ИСПРАВЬ ЭТУ СТРОКУ:
+        sources = format_sources([metadatas])  # Передаем как вложенный список
         
         response = {
             "answer": answer,
@@ -158,18 +168,26 @@ def format_context(documents, metadatas):
 
 def format_sources(metadatas):
     sources = []
-    for i, meta in enumerate(metadatas):
-        if meta:
+    
+    # 🟢 БЕЗОПАСНАЯ ОБРАБОТКА: проверяем структуру данных
+    if not metadatas:
+        return sources
+        
+    # metadatas может быть: [[]] или [[meta1, meta2, meta3]] или [meta1, meta2]
+    actual_metas = metadatas[0] if metadatas and isinstance(metadatas[0], list) else metadatas
+    
+    for i, meta in enumerate(actual_metas):
+        if meta and isinstance(meta, dict):  # 🟢 Проверяем что это словарь
             source = f"Source {i+1}: {meta.get('title', 'Unknown title')}"
             if meta.get('authors'):
                 source += f" by {meta['authors']}"
             sources.append(source)
         else:
             sources.append(f"Source {i+1}")
+    
     return sources
 
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-
     uvicorn.run(app, host="0.0.0.0", port=port)
