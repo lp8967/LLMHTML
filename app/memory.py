@@ -7,8 +7,19 @@ from datetime import datetime, timedelta
 logger = logging.getLogger(__name__)
 
 class ConversationMemory:
+    """
+    Manages conversation history and embedding cache using Redis when available,
+    or an in-memory fallback when Redis is not accessible.
+    """
+
     def __init__(self, redis_url: str = None):
+        """
+        Initialize the conversation memory storage.
+        If a Redis URL is provided, attempts to connect to Redis.
+        Falls back to in-memory storage if Redis is unavailable.
+        """
         self.redis_client = None
+
         if redis_url:
             try:
                 self.redis_client = redis.Redis.from_url(redis_url)
@@ -22,10 +33,18 @@ class ConversationMemory:
         self._conversation_history = {}
     
     def cache_embedding(self, key: str, embedding: List[float], ttl: int = 3600):
+        """
+        Store an embedding vector in cache (Redis or in-memory).
+        
+        Parameters:
+            key (str): Unique cache key.
+            embedding (List[float]): Embedding vector.
+            ttl (int): Time-to-live in seconds.
+        """
         try:
             if self.redis_client:
                 self.redis_client.setex(
-                    f"embedding:{key}", 
+                    f"embedding:{key}",
                     timedelta(seconds=ttl),
                     json.dumps(embedding)
                 )
@@ -38,6 +57,15 @@ class ConversationMemory:
             logger.error(f"Cache set failed: {e}")
     
     def get_cached_embedding(self, key: str) -> List[float]:
+        """
+        Retrieve an embedding from cache.
+
+        Parameters:
+            key (str): Cache key for the embedding.
+
+        Returns:
+            List[float] | None: Cached embedding or None if not found or expired.
+        """
         try:
             if self.redis_client:
                 cached = self.redis_client.get(f"embedding:{key}")
@@ -52,6 +80,10 @@ class ConversationMemory:
             return None
     
     def store_conversation(self, session_id: str, question: str, answer: str, sources: List[str]):
+        """
+        Store a QA pair in the conversation history for a given session.
+        Keeps only the last 10 messages.
+        """
         conversation = {
             "timestamp": datetime.now().isoformat(),
             "question": question,
@@ -68,14 +100,23 @@ class ConversationMemory:
                     self._conversation_history[session_id] = []
                 self._conversation_history[session_id].insert(0, conversation)
                 self._conversation_history[session_id] = self._conversation_history[session_id][:10]
-                
         except Exception as e:
             logger.error(f"Conversation storage failed: {e}")
     
     def get_conversation_history(self, session_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Retrieve conversation history for a session.
+
+        Parameters:
+            session_id (str): Conversation session identifier.
+            limit (int): Maximum number of messages to return.
+
+        Returns:
+            List[Dict[str, Any]]: List of conversation records.
+        """
         try:
             if self.redis_client:
-                history = self.redis_client.lrange(f"conversation:{session_id}", 0, limit-1)
+                history = self.redis_client.lrange(f"conversation:{session_id}", 0, limit - 1)
                 return [json.loads(item) for item in reversed(history)]
             else:
                 return self._conversation_history.get(session_id, [])[:limit]
@@ -84,6 +125,12 @@ class ConversationMemory:
             return []
     
     def clear_conversation(self, session_id: str):
+        """
+        Clear conversation history for a specific session.
+
+        Parameters:
+            session_id (str): Identifier of the session to clear.
+        """
         try:
             if self.redis_client:
                 self.redis_client.delete(f"conversation:{session_id}")
@@ -91,5 +138,6 @@ class ConversationMemory:
                 self._conversation_history.pop(session_id, None)
         except Exception as e:
             logger.error(f"Conversation clear failed: {e}")
+
 
 conversation_memory = ConversationMemory()
