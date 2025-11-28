@@ -5,10 +5,10 @@ from app.modular_rag import ModularRAG, RAGStrategy
 from app.database import vector_db
 
 class TestRAGQuality:
-    """Тесты качества RAG системы"""
+    """RAG system quality tests"""
     
     def test_basic_rag_returns_documents(self, sample_arxiv_data):
-        """Тест что basic RAG возвращает документы"""
+        """Test that basic RAG returns documents"""
         rag = ModularRAG()
         question = "What are transformers in AI?"
         
@@ -31,7 +31,7 @@ class TestRAGQuality:
             assert result['strategy'] == 'basic'
     
     def test_hierarchical_rag_reranking(self):
-        """Тест что hierarchical RAG выполняет переранжирование"""
+        """Test that hierarchical RAG performs re-ranking"""
         rag = ModularRAG()
         question = "transformer architecture attention mechanism"
         
@@ -51,7 +51,7 @@ class TestRAGQuality:
             assert len(result['documents']) > 0
     
     def test_adaptive_rag_strategy_selection(self):
-        """Тест что adaptive RAG выбирает стратегию по сложности вопроса"""
+        """Test that adaptive RAG selects strategy based on question complexity"""
         rag = ModularRAG()
         
         simple_question = "What is AI?"
@@ -64,7 +64,7 @@ class TestRAGQuality:
         assert 'documents' in result_complex
     
     def test_hybrid_rag_keyword_extraction(self):
-        """Тест что hybrid RAG извлекает ключевые слова"""
+        """Test that hybrid RAG extracts keywords"""
         rag = ModularRAG()
         question = "What are the main advantages of transformer models over recurrent neural networks?"
         
