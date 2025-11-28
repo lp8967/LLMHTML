@@ -62,13 +62,16 @@ async def query_documents(query_request: QueryRequest, session_id: str = "defaul
         )
         
         if not rag_results['documents']:
-            response = {
-                "answer": "I couldn't find any relevant research papers in my database to answer your question. Please try rephrasing or asking about a different topic.",
-                "sources": [],
-                "context": [],
-                "strategy": rag_strategy.value
-            }
-            return JSONResponse(content=response)
+            # Все равно генерируем ответ, но честно говорим об ограничениях
+            prompt = f"""
+            A user asked: "{query_request.question}"
+            
+            CONTEXT: I couldn't find any relevant research papers in my database.
+            
+            Please provide a helpful but honest response explaining that 
+            this might be outside my specialized academic database scope.
+            """
+            answer = gemini_client.generate_response(prompt)
         
         context_documents = rag_results['documents']
         metadatas = rag_results.get('metadatas', [])
@@ -191,3 +194,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
