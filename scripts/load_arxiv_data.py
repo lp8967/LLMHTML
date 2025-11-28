@@ -52,7 +52,7 @@ def process_arxiv_data():
         logger.info(f"📊 Loaded {len(papers)} papers from dataset")
         
         # ОГРАНИЧИВАЕМ ДО 1000 СТАТЕЙ ДЛЯ БЫСТРОЙ ЗАГРУЗКИ
-        papers = papers[:1000]
+        papers = papers[:101]
         logger.info(f"📦 Processing {len(papers)} papers")
         
         # Подготавливаем документы для векторной БД
@@ -126,3 +126,4 @@ if __name__ == "__main__":
         print("Data loading failed!")
 
         sys.exit(1)
+
