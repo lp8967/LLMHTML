@@ -6,11 +6,11 @@ from app.database import vector_db
 from app.gemini_client import gemini_client
 
 class TestRAGQualityMetrics:
-    """Тесты метрик качества RAG системы с реальными данными"""
+    """RAG system quality metrics tests with real data"""
     
     @pytest.fixture
     def benchmark_questions_answers(self):
-        """Фикстура с тестовыми вопросами и ожидаемыми ответами"""
+        """Fixture with test questions and expected answers"""
         return [
             {
                 "question": "What is the proton elastic form factor ratio?",
@@ -29,7 +29,7 @@ class TestRAGQualityMetrics:
         ]
     
     def test_retrieval_precision(self, real_arxiv_data, benchmark_questions_answers):
-        """Тест точности поиска (Precision@K)"""
+        """Test retrieval precision (Precision@K)"""
         rag = ModularRAG()
         
         for test_case in benchmark_questions_answers[:1]:
@@ -62,7 +62,7 @@ class TestRAGQualityMetrics:
                 assert precision >= 0.0
     
     def test_answer_relevance_with_gemini_mock(self, real_arxiv_data, benchmark_questions_answers):
-        """Тест релевантности ответов с mock Gemini"""
+        """Test answer relevance using mocked Gemini client"""
         rag = ModularRAG()
         
         for test_case in benchmark_questions_answers[:1]:
