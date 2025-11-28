@@ -143,7 +143,7 @@ async def get_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/health")
+@app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "Academic Research Assistant"}
 
@@ -171,4 +171,5 @@ def format_sources(metadatas):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
+
     uvicorn.run(app, host="0.0.0.0", port=port)
