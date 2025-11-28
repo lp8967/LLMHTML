@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: research-assistant
-    plan: free
-    docker:
-      dockerfile: Dockerfile
-    envVars:
-      - key: GEMINI_API_KEY
-        fromSecret: gemini-api-key
